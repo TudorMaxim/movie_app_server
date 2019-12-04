@@ -53,6 +53,24 @@ app.post("/movies", async (request, response, next) => {
     }
 })
 
+app.post("/movies/sync", async (request, response, next) => {
+    const movies = request.body
+    const currentMovies = await db.getAll().catch(err => next(err))
+    const currentMovieIds = currentMovies.map(movie => movie.id)
+    for (let movie of movies) {
+        console.log(movie, movie.id, movie['id']);
+        const exists = currentMovieIds.includes(parseInt(movie['id']))
+        if (!exists) {
+            movie.priority = parseFloat(movie.priority)
+            await db.insert(movie).catch(err => next(err))
+        }
+    }
+    response.status(200).json({
+        "message": "Movies successfully inserted",
+    })
+
+})
+
 app.delete("/movies/:id", async (request, response, next) => {
     const movieId = parseInt(request.params.id);
     const cnt = await db.delete(movieId).catch(err => next(err))
