@@ -1,6 +1,7 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const Database = require("./database");
+const express = require("express")
+const bodyParser = require("body-parser")
+const Database = require("./database")
+const { movieInDb } = require("./util")
 
 const app = express();
 const port = 3000;
@@ -23,7 +24,6 @@ app.get("/movies", async (request, response, next) => {
 
 app.get("/movies/:id", async (request, response, next) => {
     const movieId = parseInt(request.params.id)
-    console.log(movieId)
     const movie = await db.getMovieById(movieId).catch(err => next(err))
     if (movie) {
         response.status(200).json({
@@ -54,16 +54,15 @@ app.post("/movies", async (request, response, next) => {
 })
 
 app.post("/movies/sync", async (request, response, next) => {
-    const movies = request.body
-    const currentMovies = await db.getAll().catch(err => next(err))
-    const currentMovieIds = currentMovies.map(movie => movie.id)
-    for (let movie of movies) {
-        console.log(movie, movie.id, movie['id']);
-        const exists = currentMovieIds.includes(parseInt(movie['id']))
-        if (!exists) {
-            movie.priority = parseFloat(movie.priority)
-            await db.insert(movie).catch(err => next(err))
-        }
+    const moviesDb = await db.getAll().catch(err => next(err))
+    
+    const movies = request.body.sort((a, b) => a.id - b.id)
+    const currentMovies = moviesDb.sort((a, b) => a.id - b.id)
+    const offlineInsertedMovies = movies.filter(movie => !movieInDb(movie, currentMovies))
+
+    for (let movie of offlineInsertedMovies) {
+        movie.priority = parseFloat(movie.priority)
+        await db.insert(movie).catch(err => next(err))
     }
     response.status(200).json({
         "message": "Movies successfully inserted",
