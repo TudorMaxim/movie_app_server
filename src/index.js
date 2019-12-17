@@ -43,8 +43,9 @@ app.post("/movies", async (request, response, next) => {
 
     const cnt = await db.insert(movie).catch(err => next(err))
     if (cnt > 0) {
+        let movies = await db.getAll().catch(err => next(err))
         response.status(200).json({
-            "message": "Movie successfully inserted"
+            "movies": movies
         })
     } else {
         response.status(400).json({
@@ -64,8 +65,9 @@ app.post("/movies/sync", async (request, response, next) => {
         movie.priority = parseFloat(movie.priority)
         await db.insert(movie).catch(err => next(err))
     }
+    let movies = await db.getAll().catch(err => next(err))
     response.status(200).json({
-        "message": "Movies successfully inserted",
+        "movies": movies
     })
 
 })
@@ -74,8 +76,9 @@ app.delete("/movies/:id", async (request, response, next) => {
     const movieId = parseInt(request.params.id);
     const cnt = await db.delete(movieId).catch(err => next(err))
     if (cnt > 0) {
+        let movies = await db.getAll().catch(err => next(err))
         response.status(200).json({
-            "message": "Movie successfully deleted"
+            "movies": movies
         })
     } else {
         response.status(400).json({
@@ -92,8 +95,9 @@ app.patch("/movies/:id", async (request, response, next) => {
 
     const cnt = await db.update(movie).catch(err => next(err))
     if (cnt > 0) {
+        let movies = await db.getAll().catch(err => next(err))
         response.status(200).json({
-            "message": "Movie successfully updated"
+            "movies": movies
         })
     } else {
         response.status(400).json({
